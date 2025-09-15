@@ -9,12 +9,24 @@
 <body>
   <div class="chat-container">
     <h1>SydBot</h1>
+
+    <!-- Chat messages box -->
     <div id="chat-box">
+      <!-- Bot messages will appear here -->
     </div>
-    <input type="text" id="user-input" placeholder="Type your issue..." />
-    <button id="send-btn">Send</button>
+
+    <!-- Input area with button -->
+    <div class="input-area">
+      <input type="text" id="user-input" placeholder="Type your issue..." autocomplete="off"/>
+      <button id="send-btn">Send</button>
+    </div>
+
+    <!-- Typing indicator -->
+    <div id="typing-indicator" style="display:none; color:#00f; font-style:italic; margin-top:5px;">
+      SydBot is typing...
+    </div>
   </div>
-  
-<script src="script.js"></script>
+
+  <script src="script.js"></script>
 </body>
 </html>
