@@ -4,7 +4,7 @@ const chatBox = document.getElementById('chat-box');
 const typingIndicator = document.getElementById('typing-indicator');
 
 // OpenRouter API
-const OPENROUTER_API_KEY = "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";
+const OPENROUTER_API_KEY = "";
 
 // Optional offline fallback responses
 const offlineResponses = [
@@ -80,3 +80,4 @@ sendBtn.addEventListener('click', async () => {
 userInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') sendBtn.click();
 });
+
