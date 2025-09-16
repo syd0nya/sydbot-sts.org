@@ -1,0 +1,22 @@
+[
+  {
+    "patterns": ["hello", "hi", "hey", "good morning", "good afternoon"],
+    "response": "Hi! I’m SydBot, your IT assistant. How can I help you today?"
+  },
+  {
+    "patterns": ["wifi", "internet", "network", "connection lost", "can't connect"],
+    "response": "Try restarting your router and checking your network settings. If it persists, let me know the error messages you see."
+  },
+  {
+    "patterns": ["password", "login", "credentials", "forgot password", "reset password"],
+    "response": "Ensure your password is strong: letters, numbers, and symbols. If you forgot it, follow your system’s reset instructions."
+  },
+  {
+    "patterns": ["website", "ssl", "error", "website down", "website not loading"],
+    "response": "Check your SSL certificate and make sure your website plugins are up to date. I can guide you step by step if needed."
+  },
+  {
+    "patterns": ["phishing", "email", "scam", "suspicious link"],
+    "response": "Never click suspicious links. Always verify sender email and enable 2FA for better security."
+  }
+]
