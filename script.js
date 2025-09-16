@@ -3,56 +3,80 @@ const userInput = document.getElementById('user-input');
 const chatBox = document.getElementById('chat-box');
 const typingIndicator = document.getElementById('typing-indicator');
 
-async function getAIResponse(userMessage) {
-  // Hugging Face free model endpoint
-  const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      // Optional: This public endpoint works without a key but may rate-limit.
-    },
-    body: JSON.stringify({
-      inputs: `You are SydBot, a professional IT support and cybersecurity assistant. Answer clearly and helpfully.\nUser: ${userMessage}\nSydBot:`
-    })
-  });
+// OpenRouter API
+const OPENROUTER_API_KEY = "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";
 
-  const data = await response.json();
-  return data[0]?.generated_text?.split("SydBot:")[1]?.trim() || "I'm having trouble responding right now.";
+// Optional offline fallback responses
+const offlineResponses = [
+  { keywords: ["wifi", "internet", "connection"], reply: "Try restarting your router and check if other devices are connected." },
+  { keywords: ["password", "login"], reply: "Use a strong password with numbers, symbols, and uppercase letters." },
+  { keywords: ["website", "ssl"], reply: "Check your SSL certificate and ensure your DNS records are correct." },
+  { keywords: ["slow", "lag", "performance"], reply: "Clear cache and restart your system. Also, check for updates." }
+];
+
+function getOfflineResponse(userMessage) {
+  const msg = userMessage.toLowerCase();
+  for (const item of offlineResponses) {
+    if (item.keywords.some(keyword => msg.includes(keyword))) {
+      return item.reply;
+    }
+  }
+  return "I'm not sure about that yet. Could you describe the issue differently?";
+}
+
+function addMessage(sender, text) {
+  const msg = document.createElement('div');
+  msg.classList.add('message', sender === 'user' ? 'user-msg' : 'bot-msg');
+  msg.innerText = text;
+  chatBox.appendChild(msg);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function getAIResponse(userMessage) {
+  typingIndicator.style.display = "flex";
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "mistralai/mistral-7b-instruct",
+        messages: [
+          { role: "system", content: "You are SydBot, a friendly IT and cybersecurity assistant. Respond clearly and professionally." },
+          { role: "user", content: userMessage }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    typingIndicator.style.display = "none";
+
+    if (data.choices && data.choices.length > 0) {
+      return data.choices[0].message.content;
+    } else {
+      return getOfflineResponse(userMessage);
+    }
+  } catch (error) {
+    console.error("Error fetching AI response:", error);
+    typingIndicator.style.display = "none";
+    return getOfflineResponse(userMessage);
+  }
 }
 
 sendBtn.addEventListener('click', async () => {
   const userText = userInput.value.trim();
   if (!userText) return;
 
-  // Display user message
-  const userMsg = document.createElement('div');
-  userMsg.classList.add('message', 'user-msg');
-  userMsg.innerText = userText;
-  chatBox.appendChild(userMsg);
-
-  // Clear input
+  addMessage('user', userText);
   userInput.value = '';
-  chatBox.scrollTop = chatBox.scrollHeight;
 
-  // Show typing indicator
-  typingIndicator.style.display = 'flex';
-
-  // Get AI response
   const botReply = await getAIResponse(userText);
-
-  // Hide typing indicator
-  typingIndicator.style.display = 'none';
-
-  // Display bot message
-  const botMsg = document.createElement('div');
-  botMsg.classList.add('message', 'bot-msg');
-  botMsg.innerText = botReply;
-  chatBox.appendChild(botMsg);
-
-  chatBox.scrollTop = chatBox.scrollHeight;
+  addMessage('bot', botReply);
 });
 
-// Allow Enter key to send
 userInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') sendBtn.click();
 });
