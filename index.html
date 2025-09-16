@@ -11,19 +11,20 @@
     <h1>SydBot</h1>
 
     <!-- Chat messages box -->
-    <div id="chat-box">
-      <!-- Bot messages will appear here -->
+    <div id="chat-box"></div>
+
+    <!-- Typing indicator -->
+    <div id="typing-indicator" style="display:none;">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      SydBot is thinking...
     </div>
 
     <!-- Input area with button -->
     <div class="input-area">
       <input type="text" id="user-input" placeholder="Type your issue..." autocomplete="off"/>
       <button id="send-btn">Send</button>
-    </div>
-
-    <!-- Typing indicator -->
-    <div id="typing-indicator" style="display:none; color:#00f; font-style:italic; margin-top:5px;">
-      SydBot is typing...
     </div>
   </div>
 
