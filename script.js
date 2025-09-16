@@ -1,83 +1,64 @@
-const sendBtn = document.getElementById('send-btn');
-const userInput = document.getElementById('user-input');
-const chatBox = document.getElementById('chat-box');
-const typingIndicator = document.getElementById('typing-indicator');
+const chatBox = document.getElementById("chat-box");
+const userInput = document.getElementById("user-input");
+const sendBtn = document.getElementById("send-btn");
+const typingIndicator = document.getElementById("typing-indicator");
 
-// OpenRouter API
-const OPENROUTER_API_KEY = "";
+let knowledge = [];
 
-// Optional offline fallback responses
-const offlineResponses = [
-  { keywords: ["wifi", "internet", "connection"], reply: "Try restarting your router and check if other devices are connected." },
-  { keywords: ["password", "login"], reply: "Use a strong password with numbers, symbols, and uppercase letters." },
-  { keywords: ["website", "ssl"], reply: "Check your SSL certificate and ensure your DNS records are correct." },
-  { keywords: ["slow", "lag", "performance"], reply: "Clear cache and restart your system. Also, check for updates." }
-];
+// Load knowledge
+async function loadKnowledge() {
+  const res = await fetch("knowledge.json");
+  knowledge = await res.json();
+}
+loadKnowledge();
 
-function getOfflineResponse(userMessage) {
-  const msg = userMessage.toLowerCase();
-  for (const item of offlineResponses) {
-    if (item.keywords.some(keyword => msg.includes(keyword))) {
-      return item.reply;
+// Calculate match score for a message
+function matchScore(message, patterns) {
+  message = message.toLowerCase();
+  let score = 0;
+  for (let p of patterns) {
+    if (message.includes(p.toLowerCase())) score++;
+  }
+  return score;
+}
+
+// Get AI response
+function getAIResponse(message) {
+  let bestMatch = null;
+  let maxScore = 0;
+
+  for (let item of knowledge) {
+    let score = matchScore(message, item.patterns);
+    if (score > maxScore) {
+      maxScore = score;
+      bestMatch = item;
     }
   }
-  return "I'm not sure about that yet. Could you describe the issue differently?";
+
+  if (bestMatch && maxScore > 0) return bestMatch.response;
+  return "I’m still learning. Can you try asking differently?";
 }
 
-function addMessage(sender, text) {
-  const msg = document.createElement('div');
-  msg.classList.add('message', sender === 'user' ? 'user-msg' : 'bot-msg');
-  msg.innerText = text;
-  chatBox.appendChild(msg);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
+// Send button
+sendBtn.addEventListener("click", () => {
+  const text = userInput.value.trim();
+  if (!text) return;
 
-async function getAIResponse(userMessage) {
-  typingIndicator.style.display = "flex";
+  // User message
+  const userMsg = document.createElement("div");
+  userMsg.classList.add("message", "user-msg");
+  userMsg.innerText = text;
+  chatBox.appendChild(userMsg);
+  userInput.value = "";
 
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "mistralai/mistral-7b-instruct",
-        messages: [
-          { role: "system", content: "You are SydBot, a friendly IT and cybersecurity assistant. Respond clearly and professionally." },
-          { role: "user", content: userMessage }
-        ]
-      })
-    });
-
-    const data = await response.json();
+  // Typing animation
+  typingIndicator.style.display = "block";
+  setTimeout(() => {
+    const botMsg = document.createElement("div");
+    botMsg.classList.add("message", "bot-msg");
+    botMsg.innerText = getAIResponse(text);
+    chatBox.appendChild(botMsg);
     typingIndicator.style.display = "none";
-
-    if (data.choices && data.choices.length > 0) {
-      return data.choices[0].message.content;
-    } else {
-      return getOfflineResponse(userMessage);
-    }
-  } catch (error) {
-    console.error("Error fetching AI response:", error);
-    typingIndicator.style.display = "none";
-    return getOfflineResponse(userMessage);
-  }
-}
-
-sendBtn.addEventListener('click', async () => {
-  const userText = userInput.value.trim();
-  if (!userText) return;
-
-  addMessage('user', userText);
-  userInput.value = '';
-
-  const botReply = await getAIResponse(userText);
-  addMessage('bot', botReply);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }, 800);
 });
-
-userInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') sendBtn.click();
-});
-
